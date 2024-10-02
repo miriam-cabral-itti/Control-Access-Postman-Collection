@@ -1,0 +1,50 @@
+name: Run Newman Tests
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # Ejecutar cada día a las 9 AM
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  newman-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Newman and Reporter
+        run: |
+          npm install -g newman
+          npm install -g newman-reporter-html
+
+      - name: List Files
+        run: ls -la
+
+      - name: Print Newman Version
+        run: newman --version
+
+      - name: Run Newman tests
+        run: |
+          newman run  "Api para el control de acceso Multi-Tenant.postman_collection.json" --reporters html --reporter-html-export newman-report.html || true
+        # Usa `continue-on-error: true` si quieres continuar el flujo de trabajo en caso de fallo
+        continue-on-error: true
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v3
+        with:
+          name: newman-html-report
+          path: newman-report.html
